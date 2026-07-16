@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}قائمة الأجهزة{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+  <h4 class="m-0 fw-bold text-primary">الأجهزة المسجلة ({{ devices|length }})</h4>
+  <form class="d-flex" method="get" action="{{ url_for('index') }}">
+    <div class="input-group shadow-sm" style="width: 320px;">
+      <input type="text" name="q" value="{{ q }}" class="form-control border-end-0" placeholder="ابحث بالاسم، الكود، المسلسل...">
+      <button class="btn btn-primary px-4"><i class="bi bi-search"></i> بحث</button>
+    </div>
+  </form>
+</div>
+
+{% if devices %}
+<div class="row g-4">
+  {% for d in devices %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card card-shadow h-100 overflow-hidden">
+      {% if d.image_base64 %}
+      <div style="height:220px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; padding: 15px;">
+        <img src="data:image/jpeg;base64,{{ d.image_base64 }}" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;">
+      </div>
+      {% elif d.image_filename %}
+      <div style="height:220px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; padding: 15px;">
+        <img src="{{ url_for('static', filename='uploads/' + d.image_filename) }}" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;">
+      </div>
+      {% else %}
+      <div class="d-flex flex-column align-items-center justify-content-center bg-light text-muted" style="height:220px;">
+        <i class="bi bi-image" style="font-size: 3rem; opacity: 0.5;"></i>
+        <span class="mt-2 fw-semibold">لا توجد صورة</span>
+      </div>
+      {% endif %}
+      
+      <div class="card-body d-flex flex-column p-4">
+        <h5 class="card-title fw-bold mb-3 text-dark">{{ d.device_name }}</h5>
+        
+        <div class="mb-4 flex-grow-1">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <span class="text-muted small"><i class="bi bi-upc-scan me-1"></i> الكود</span>
+            <span class="fw-bold text-primary">{{ d.device_code }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <span class="text-muted small"><i class="bi bi-tag me-1"></i> الموديل</span>
+            <span class="fw-semibold text-truncate ms-3" style="max-width: 60%;" dir="ltr">{{ d.model }}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center pb-1">
+            <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> المكان</span>
+            <span class="fw-semibold text-dark">{{ d.location }}</span>
+          </div>
+        </div>
+        
+        <div class="d-flex gap-2 mt-auto">
+          <a href="{{ url_for('view_card', device_id=d.id) }}" class="btn btn-primary flex-fill fw-bold"><i class="bi bi-card-heading me-1"></i> الكارت</a>
+          {% if logged_in_user and logged_in_user['role'] == 'admin' %}
+          <a href="{{ url_for('edit_device', device_id=d.id) }}" class="btn btn-light border px-3" title="تعديل"><i class="bi bi-pencil-square text-secondary"></i></a>
+          <form method="post" action="{{ url_for('delete_device', device_id=d.id) }}" onsubmit="return confirm('تأكيد حذف الجهاز نهائياً؟');" class="d-inline">
+            <button class="btn btn-light border px-3 text-danger" title="حذف"><i class="bi bi-trash3-fill"></i></button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert bg-white shadow-sm p-5 text-center rounded-4 border-0 mt-4">
+  <i class="bi bi-box-seam text-muted" style="font-size: 4rem;"></i>
+  <h4 class="fw-bold mt-4 mb-3 text-dark">لا توجد أجهزة مسجلة</h4>
+  <p class="text-muted mb-4 fs-5">لم يتم إضافة أي أجهزة طبية للنظام بعد.</p>
+  {% if logged_in_user and logged_in_user['role'] == 'admin' %}
+  <a href="{{ url_for('add_device') }}" class="btn btn-primary btn-lg fw-bold shadow-sm px-5">+ إضافة أول جهاز</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}إدارة المستخدمين{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h4 class="m-0 fw-bold text-primary"><i class="bi bi-people-fill me-2"></i> إدارة المستخدمين والصلاحيات</h4>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5 col-lg-4">
+    <div class="card card-shadow border-0">
+      <div class="card-body p-4">
+        <h6 class="mb-4 fw-bold text-dark border-bottom pb-2"><i class="bi bi-person-plus text-primary me-2"></i> إضافة مستخدم جديد</h6>
+        <form method="post" action="{{ url_for('users_add') }}">
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted text-uppercase">اسم المستخدم</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" class="form-control bg-light" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-muted text-uppercase">كلمة المرور</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+              <input type="password" name="password" class="form-control bg-light" required>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-muted text-uppercase">مستوى الصلاحية</label>
+            <select name="role" class="form-select bg-light">
+              <option value="viewer">مشاهد (عرض وتقارير فقط)</option>
+              <option value="admin">أدمن (تحكم كامل)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm"><i class="bi bi-plus-circle me-1"></i> إضافة المستخدم</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7 col-lg-8">
+    <div class="card card-shadow border-0 h-100">
+      <div class="card-body p-4">
+        <h6 class="mb-4 fw-bold text-dark border-bottom pb-2"><i class="bi bi-card-list text-primary me-2"></i> الحسابات المسجلة بالنظام ({{ users|length }})</h6>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>اسم المستخدم</th>
+                <th>الصلاحية</th>
+                <th>تاريخ الإنشاء</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in users %}
+              <tr>
+                <td class="fw-bold text-dark"><i class="bi bi-person-circle text-secondary me-2"></i>{{ u['username'] }}</td>
+                <td>
+                  {% if u['role'] == 'admin' %}
+                  <span class="badge bg-danger rounded-pill px-3 shadow-sm"><i class="bi bi-shield-lock me-1"></i> أدمن</span>
+                  {% else %}
+                  <span class="badge bg-secondary rounded-pill px-3"><i class="bi bi-eye me-1"></i> مشاهد</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted"><i class="bi bi-calendar3 me-1"></i> {{ u['created_at'][:10] if u['created_at'] else 'غير معروف' }}</td>
+                <td>
+                  <form method="post" action="{{ url_for('users_delete', user_id=u['id']) }}" onsubmit="return confirm('تأكيد حذف حساب المستخدم نهائياً؟');">
+                    <button class="btn btn-sm btn-outline-danger" title="حذف المستخدم"><i class="bi bi-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

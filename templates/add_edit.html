@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل جهاز' if device else 'إضافة جهاز جديد' }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-10">
+<div class="card card-shadow border-0">
+  <div class="card-body p-4 p-md-5">
+    <h4 class="mb-4 fw-bold text-primary border-bottom pb-3"><i class="bi bi-pc-display-horizontal me-2"></i> {{ 'تعديل بيانات الجهاز' if device else 'إضافة جهاز طبي جديد' }}</h4>
+    <form method="post" enctype="multipart/form-data">
+      <div class="row g-4">
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">اسم الجهة / المستشفى</label>
+          <input type="text" name="org_name" class="form-control bg-light" value="{{ device['org_name'] if device else 'مستشفيات جامعة قناة السويس' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">اسم النظام</label>
+          <input type="text" name="system_name" class="form-control bg-light" value="{{ device['system_name'] if device else 'نظام تكويد الأجهزة الطبية' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-danger">اسم الجهاز *</label>
+          <input type="text" name="device_name" class="form-control border-primary" required value="{{ device['device_name'] if device else '' }}" placeholder="مثال: جهاز تنفس صناعي">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">كود الجهاز على النظام</label>
+          <input type="text" name="device_code" class="form-control" value="{{ device['device_code'] if device else '' }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-bold">المكان داخل القسم</label>
+          <input type="text" name="location" class="form-control" value="{{ device['location'] if device else '' }}" placeholder="مثال: الرعاية المركزة سرير 5">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">ماركة الجهاز (Brand)</label>
+          <input type="text" name="brand" class="form-control" value="{{ device['brand'] if device else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">موديل الجهاز (Model)</label>
+          <input type="text" name="model" class="form-control" value="{{ device['model'] if device else '' }}" dir="ltr">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">الرقم التسلسلي (S/N)</label>
+          <input type="text" name="serial_number" class="form-control" value="{{ device['serial_number'] if device else '' }}" dir="ltr">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">الشركة الوكيل</label>
+          <input type="text" name="agent_company" class="form-control" value="{{ device['agent_company'] if device else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">شركة الصيانة</label>
+          <input type="text" name="maintenance_company" class="form-control" value="{{ device['maintenance_company'] if device else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">موقف الصيانة الحالي</label>
+          <input type="text" name="maintenance_status" class="form-control" value="{{ device['maintenance_status'] if device else '' }}" placeholder="مثال: يعمل بحالة جيدة / معطل">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">تاريخ بداية التعاقد/الضمان</label>
+          <input type="date" name="contract_start" class="form-control" value="{{ device['contract_start'] if device else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">تاريخ انتهاء التعاقد/الضمان</label>
+          <input type="date" name="contract_end" class="form-control" value="{{ device['contract_end'] if device else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-bold">اسم مهندس/مسئول الصيانة</label>
+          <input type="text" name="maintenance_officer" class="form-control" value="{{ device['maintenance_officer'] if device else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">تليفون الطوارئ والصيانة</label>
+          <input type="text" name="maintenance_phone" class="form-control" value="{{ device['maintenance_phone'] if device else '' }}" dir="ltr">
+        </div>
+
+        <div class="col-12 mt-4 p-4 border rounded bg-light">
+          <label class="form-label fw-bold"><i class="bi bi-camera"></i> صورة الجهاز</label>
+          <input type="file" name="device_image" class="form-control bg-white" accept="image/*">
+          <div class="form-text mt-2 text-muted">اختر صورة واضحة للجهاز، سيتم ضغطها وتخزينها في قاعدة البيانات مباشرة لتجنب فقدانها.</div>
+          
+          {% if device and device['image_base64'] %}
+          <div class="mt-3">
+            <p class="small text-muted mb-1">الصورة الحالية:</p>
+            <img src="data:image/jpeg;base64,{{ device['image_base64'] }}" class="rounded shadow-sm border border-secondary" style="height:120px; object-fit:contain;">
+          </div>
+          {% elif device and device['image_filename'] %}
+          <div class="mt-3">
+            <p class="small text-muted mb-1">الصورة الحالية (النظام القديم):</p>
+            <img src="{{ url_for('static', filename='uploads/' + device['image_filename']) }}" class="rounded shadow-sm border border-secondary" style="height:120px; object-fit:contain;">
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div class="mt-5 d-flex gap-3 justify-content-end">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary px-4 fw-bold">إلغاء</a>
+        <button type="submit" class="btn btn-primary px-5 fw-bold"><i class="bi bi-check-circle me-1"></i> حفظ البيانات</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+</div>
+{% endblock %}
