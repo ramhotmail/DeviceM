@@ -131,7 +131,7 @@ export default function AddDevice() {
           </div>
           <div>
             <label className="block text-gray-700 font-bold mb-2">تليفون مسئول الصيانة</label>
-            <input type="text" name="maintenance_phone" onChange={handleChange} className="w-full border p-3 rounded outline-none focus:border-blue-500" />
+            <input type="tel" name="maintenance_phone" onChange={handleChange} placeholder="مثال: 01012345678 أو +201012345678" dir="ltr" className="w-full border p-3 rounded outline-none focus:border-blue-500" />
           </div>
           <div className="md:col-span-2">
             <label className="block text-gray-700 font-bold mb-2">صورة الجهاز</label>

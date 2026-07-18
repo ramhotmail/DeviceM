@@ -2,11 +2,8 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { withAuth } from '@/lib/auth';
 
-export async function GET(request: Request, context: any) {
+export async function GET(_request: Request, context: any) {
   const { params } = context;
-  const auth = await withAuth(request);
-  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
   const { id } = await params;
   const db = getDb();
 

@@ -4,21 +4,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 
+function whatsappNumber(value: string) {
+  let phone = (value || '').replace(/\D/g, '');
+  if (phone.startsWith('00')) phone = phone.slice(2);
+  if (phone.startsWith('0') && phone.length === 11) phone = `20${phone.slice(1)}`;
+  return phone;
+}
+
 export default function CardPage() {
   const { id } = useParams();
   const [device, setDevice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [fault, setFault] = useState('');
+  const [reporter, setReporter] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchDevice() {
       try {
         const res = await fetch(`/api/devices/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setDevice(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch device', error);
+        if (res.ok) setDevice(await res.json());
+      } catch (fetchError) {
+        console.error('Failed to fetch device', fetchError);
       } finally {
         setLoading(false);
       }
@@ -26,82 +33,97 @@ export default function CardPage() {
     fetchDevice();
   }, [id]);
 
-  if (loading) {
-    return <div className="p-10 text-center font-bold">جاري تحميل بيانات الكارت...</div>;
-  }
-
-  if (!device) {
-    return <div className="p-10 text-center text-red-500 font-bold">لم يتم العثور على الجهاز!</div>;
-  }
+  if (loading) return <div className="p-10 text-center font-bold">جاري تحميل بيانات الجهاز...</div>;
+  if (!device) return <div className="p-10 text-center font-bold text-red-600">لم يتم العثور على الجهاز.</div>;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const qrUrl = `${origin}/card/${id}`;
+  const phone = whatsappNumber(device.maintenance_phone || '');
+
+  const sendReport = (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    if (!fault.trim()) return setError('برجاء كتابة وصف العطل.');
+    if (!phone) return setError('رقم مسؤول الصيانة غير مسجل لهذا الجهاز.');
+
+    const lines = [
+      'بلاغ عطل جهاز طبي',
+      `الجهاز: ${device.device_name || '-'}`,
+      `كود الجهاز: ${device.device_code || '-'}`,
+      `المكان: ${device.location || '-'}`,
+      `العطل: ${fault.trim()}`,
+      reporter.trim() ? `اسم المبلغ: ${reporter.trim()}` : '',
+      `رابط الجهاز: ${qrUrl}`
+    ].filter(Boolean);
+
+    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
 
   const renderRow = (label: string, value: string | null) => (
-    <div className="flex justify-between items-center border-b border-gray-300 py-1 text-[10px] print:text-[9px]">
-      <div className="text-gray-800 font-bold whitespace-nowrap ml-2">{label} :</div>
-      <div className="text-gray-900 font-bold whitespace-nowrap overflow-hidden text-ellipsis">{value || '-'}</div>
+    <div className="flex items-center justify-between border-b border-gray-300 py-1 text-[10px] print:text-[9px]">
+      <div className="ml-2 whitespace-nowrap font-bold text-gray-800">{label} :</div>
+      <div className="overflow-hidden text-ellipsis whitespace-nowrap font-bold text-gray-900">{value || '-'}</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 print:p-0 print:bg-white print:block">
-      {/* Card Container - Mobile/ID Size */}
-      <div className="bg-white shadow-xl border-2 border-gray-800 p-4 w-[350px] relative mx-auto print:shadow-none print:border-2 print:w-[8cm] print:p-3 print:m-0">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center border-b-2 border-gray-800 pb-1 mb-2">
-          <div className="text-right">
-            <h1 className="text-base font-extrabold text-gray-900 leading-tight">مستشفيات جامعة قناة السويس</h1>
-            <h2 className="text-sm font-bold text-gray-700 mt-1">نظام تكويد الأجهزة الطبية</h2>
+    <main className="min-h-screen bg-slate-100 p-4 sm:p-8 print:bg-white print:p-0" dir="rtl">
+      <div className="mx-auto grid max-w-4xl items-start gap-6 md:grid-cols-[350px_1fr] print:block">
+        <section className="relative mx-auto w-[350px] border-2 border-gray-800 bg-white p-4 shadow-xl print:m-0 print:w-[8cm] print:border-2 print:p-3 print:shadow-none">
+          <div className="mb-2 flex items-center justify-between border-b-2 border-gray-800 pb-1">
+            <div className="text-right">
+              <h1 className="text-base font-extrabold leading-tight text-gray-900">مستشفيات جامعة قناة السويس</h1>
+              <h2 className="mt-1 text-sm font-bold text-gray-700">نظام تكويد الأجهزة الطبية</h2>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center p-1"><img src="/logo.png" alt="Logo" className="max-h-full max-w-full object-contain" /></div>
           </div>
-          {/* Logo container */}
-          <div className="w-14 h-14 flex items-center justify-center p-1">
-            <img src="/logo.png" alt="Logo" className="max-w-full max-h-full object-contain" />
+
+          <div className="mx-auto mb-2 flex overflow-hidden border border-gray-300 bg-gray-50" style={{ width: '4cm', height: '3cm' }}>
+            {device.image_base64 ? <img src={`data:image/jpeg;base64,${device.image_base64}`} alt={device.device_name} className="h-full w-full object-contain" /> : <span className="self-center text-sm text-gray-400">لا توجد صورة للجهاز</span>}
           </div>
-        </div>
 
-        {/* Device Image */}
-        <div className="flex justify-center mb-2 mx-auto overflow-hidden border border-gray-300 bg-gray-50" style={{ width: '4cm', height: '3cm' }}>
-          {device.image_base64 ? (
-            <img src={`data:image/jpeg;base64,${device.image_base64}`} alt={device.device_name} className="w-full h-full object-contain" />
-          ) : (
-            <span className="text-gray-400 self-center text-sm">لا توجد صورة للجهاز</span>
-          )}
-        </div>
-
-        {/* Data Table */}
-        <div className="mb-4">
-          {renderRow('اسم الجهاز', device.device_name)}
-          {renderRow('كود الجهاز على النظام', device.device_code)}
-          {renderRow('المكان داخل القسم', device.location)}
-          {renderRow('ماركة الجهاز', device.brand)}
-          {renderRow('موديل الجهاز', device.model)}
-          {renderRow('رقم مسلسل', device.serial_number)}
-          {renderRow('الشركة الوكيل', device.agent_company)}
-          {renderRow('شركة الصيانة', device.maintenance_company)}
-          {renderRow('موقف الصيانة', device.maintenance_status)}
-          {renderRow('بداية التعاقد/الضمان', device.contract_start)}
-          {renderRow('انتهاء التعاقد/الضمان', device.contract_end)}
-          {renderRow('مسئول الصيانة', device.maintenance_officer)}
-          {renderRow('تليفون مسئول الصيانة', device.maintenance_phone)}
-        </div>
-
-        {/* QR Code */}
-        <div className="flex justify-end mt-2">
-          <div className="p-1 border border-gray-300 bg-white">
-            <QRCodeSVG value={qrUrl} size={70} />
+          <div className="mb-4">
+            {renderRow('اسم الجهاز', device.device_name)}
+            {renderRow('كود الجهاز على النظام', device.device_code)}
+            {renderRow('المكان داخل القسم', device.location)}
+            {renderRow('ماركة الجهاز', device.brand)}
+            {renderRow('موديل الجهاز', device.model)}
+            {renderRow('رقم مسلسل', device.serial_number)}
+            {renderRow('الشركة الوكيل', device.agent_company)}
+            {renderRow('شركة الصيانة', device.maintenance_company)}
+            {renderRow('موقف الصيانة', device.maintenance_status)}
+            {renderRow('بداية التعاقد/الضمان', device.contract_start)}
+            {renderRow('انتهاء التعاقد/الضمان', device.contract_end)}
+            {renderRow('مسئول الصيانة', device.maintenance_officer)}
+            {renderRow('تليفون مسئول الصيانة', device.maintenance_phone)}
           </div>
-        </div>
 
-        {/* Print Button (Hidden in Print) */}
-        <button 
-          onClick={() => window.print()}
-          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg print:hidden transition-all shadow-md text-sm"
-        >
-          طباعة الكارت
-        </button>
+          <div className="mt-2 flex justify-end"><div className="border border-gray-300 bg-white p-1"><QRCodeSVG value={qrUrl} size={70} /></div></div>
+          <button onClick={() => window.print()} className="mt-6 w-full rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 print:hidden">طباعة الكارت</button>
+        </section>
+
+        <section className="rounded-2xl bg-white p-5 shadow-sm sm:p-7 print:hidden">
+          <div className="mb-5 border-b border-slate-200 pb-4">
+            <span className="mb-2 inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">بلاغ صيانة</span>
+            <h2 className="text-2xl font-bold text-slate-900">الإبلاغ عن عطل</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">اكتب وصف العطل وسيُفتح WhatsApp على هاتفك برسالة جاهزة لمسؤول الصيانة.</p>
+          </div>
+
+          <div className="mb-5 rounded-xl bg-slate-50 p-4 text-sm">
+            <div className="font-bold text-slate-900">{device.device_name || 'جهاز بدون اسم'}</div>
+            <div className="mt-1 text-slate-600">الكود: {device.device_code || '-'} · المكان: {device.location || '-'}</div>
+            <div className="mt-1 text-slate-600">مسؤول الصيانة: {device.maintenance_officer || '-'} · {device.maintenance_phone || 'لا يوجد رقم'}</div>
+          </div>
+
+          <form onSubmit={sendReport} className="space-y-4">
+            <label className="block"><span className="mb-2 block font-bold text-slate-800">وصف العطل *</span><textarea value={fault} onChange={e => setFault(e.target.value)} required rows={5} maxLength={1000} placeholder="مثال: الجهاز لا يعمل وتظهر رسالة خطأ..." className="w-full resize-y rounded-xl border border-slate-300 p-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" /></label>
+            <label className="block"><span className="mb-2 block font-bold text-slate-800">اسم المُبلّغ (اختياري)</span><input value={reporter} onChange={e => setReporter(e.target.value)} maxLength={100} placeholder="اكتب اسمك" className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" /></label>
+            {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{error}</div>}
+            <button disabled={!phone} className="w-full rounded-xl bg-green-600 px-5 py-3.5 text-lg font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-400">إرسال البلاغ عبر WhatsApp</button>
+            {!phone && <p className="text-center text-sm text-red-600">يجب تسجيل رقم مسؤول الصيانة في بيانات الجهاز أولًا.</p>}
+          </form>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
