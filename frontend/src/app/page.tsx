@@ -8,10 +8,13 @@ export default function Dashboard() {
   const [devices, setDevices] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchDevices();
+    fetch('/api/auth/me').then(res => res.ok ? res.json() : null).then(data => setCurrentUser(data?.user || null));
   }, []);
 
   const fetchDevices = async (q = '') => {
@@ -41,17 +44,41 @@ export default function Dashboard() {
     router.push('/login');
   };
 
+  const handleDelete = async (device: any) => {
+    const label = device.device_name || 'الجهاز';
+    const code = device.device_code ? ` (${device.device_code})` : '';
+    if (!window.confirm(`هل تريد حذف ${label}${code} نهائيًا؟\nلا يمكن التراجع عن الحذف.`)) return;
+
+    setDeletingId(device.id);
+    try {
+      const res = await fetch(`/api/devices/${device.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setDevices(current => current.filter(item => item.id !== device.id));
+      } else if (res.status === 403) {
+        alert('الحذف متاح لمدير النظام فقط.');
+      } else {
+        alert('تعذر حذف الجهاز. حاول مرة أخرى.');
+      }
+    } catch {
+      alert('تعذر الاتصال بالخادم.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
         <div className="text-xl font-bold">لوحة التحكم - الأجهزة الطبية</div>
         <div className="flex gap-4">
-          <Link href="/users" className="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded font-semibold transition">
-            إدارة المستخدمين
-          </Link>
-          <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
-            إضافة جهاز جديد +
-          </Link>
+          {currentUser?.role === 'admin' && <>
+            <Link href="/users" className="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded font-semibold transition">
+              إدارة المستخدمين
+            </Link>
+            <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
+              إضافة جهاز جديد +
+            </Link>
+          </>}
           <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold transition">
             تسجيل خروج
           </button>
@@ -107,7 +134,16 @@ export default function Dashboard() {
                       <Link href={`/card/${d.id}`} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
                         عرض الكارت
                       </Link>
-                      {/* You can add edit/delete buttons here based on role later */}
+                      {currentUser?.role === 'admin' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(d)}
+                          disabled={deletingId === d.id}
+                          className="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-wait disabled:bg-red-300"
+                        >
+                          {deletingId === d.id ? 'جاري الحذف...' : 'حذف'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
