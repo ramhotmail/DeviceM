@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-database.db
-static/uploads/*
-!static/uploads/.gitkeep
-static/qrcodes/*
-!static/qrcodes/.gitkeep
-.env

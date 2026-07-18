@@ -1,0 +1,9 @@
+/node_modules
+/.next
+/out
+.env*
+database.db-shm
+database.db-wal
+*.log
+.DS_Store
+database.db
