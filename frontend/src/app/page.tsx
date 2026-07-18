@@ -46,6 +46,9 @@ export default function Dashboard() {
       <nav className="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
         <div className="text-xl font-bold">لوحة التحكم - الأجهزة الطبية</div>
         <div className="flex gap-4">
+          <Link href="/users" className="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded font-semibold transition">
+            إدارة المستخدمين
+          </Link>
           <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
             إضافة جهاز جديد +
           </Link>

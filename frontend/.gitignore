@@ -7,3 +7,5 @@ database.db-wal
 *.log
 .DS_Store
 database.db
+.vercel
+.env*
