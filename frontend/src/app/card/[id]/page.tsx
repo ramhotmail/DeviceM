@@ -18,6 +18,8 @@ export default function CardPage() {
   const [fault, setFault] = useState('');
   const [reporter, setReporter] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchDevice() {
@@ -40,23 +42,38 @@ export default function CardPage() {
   const qrUrl = `${origin}/card/${id}`;
   const phone = whatsappNumber(device.maintenance_phone || '');
 
-  const sendReport = (event: React.FormEvent) => {
+  const sendReport = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError('');
+    setError(''); setSuccess('');
     if (!fault.trim()) return setError('برجاء كتابة وصف العطل.');
-    if (!phone) return setError('رقم مسؤول الصيانة غير مسجل لهذا الجهاز.');
 
-    const lines = [
-      'بلاغ عطل جهاز طبي',
-      `الجهاز: ${device.device_name || '-'}`,
-      `كود الجهاز: ${device.device_code || '-'}`,
-      `المكان: ${device.location || '-'}`,
-      `العطل: ${fault.trim()}`,
-      reporter.trim() ? `اسم المبلغ: ${reporter.trim()}` : '',
-      `رابط الجهاز: ${qrUrl}`
-    ].filter(Boolean);
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/maintenance-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: id, faultText: fault.trim(), reporterName: reporter.trim() })
+      });
+      if (!response.ok) throw new Error();
 
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+      setSuccess('تم حفظ البلاغ في شاشة المتابعة بنجاح.');
+      const lines = [
+        'بلاغ عطل جهاز طبي',
+        `الجهاز: ${device.device_name || '-'}`,
+        `كود الجهاز: ${device.device_code || '-'}`,
+        `المكان: ${device.location || '-'}`,
+        `العطل: ${fault.trim()}`,
+        reporter.trim() ? `اسم المبلغ: ${reporter.trim()}` : '',
+        `رابط الجهاز: ${qrUrl}`
+      ].filter(Boolean);
+      setFault(''); setReporter('');
+
+      if (phone) window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+    } catch {
+      setError('تعذر حفظ البلاغ. برجاء المحاولة مرة أخرى.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderRow = (label: string, value: string | null) => (
@@ -119,8 +136,9 @@ export default function CardPage() {
             <label className="block"><span className="mb-2 block font-bold text-slate-800">وصف العطل *</span><textarea value={fault} onChange={e => setFault(e.target.value)} required rows={5} maxLength={1000} placeholder="مثال: الجهاز لا يعمل وتظهر رسالة خطأ..." className="w-full resize-y rounded-xl border border-slate-300 p-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" /></label>
             <label className="block"><span className="mb-2 block font-bold text-slate-800">اسم المُبلّغ (اختياري)</span><input value={reporter} onChange={e => setReporter(e.target.value)} maxLength={100} placeholder="اكتب اسمك" className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" /></label>
             {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{error}</div>}
-            <button disabled={!phone} className="w-full rounded-xl bg-green-600 px-5 py-3.5 text-lg font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-400">إرسال البلاغ عبر WhatsApp</button>
-            {!phone && <p className="text-center text-sm text-red-600">يجب تسجيل رقم مسؤول الصيانة في بيانات الجهاز أولًا.</p>}
+            {success && <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm font-bold text-green-700">{success}</div>}
+            <button disabled={submitting} className="w-full rounded-xl bg-green-600 px-5 py-3.5 text-lg font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-wait disabled:bg-slate-400">{submitting ? 'جاري حفظ البلاغ...' : phone ? 'حفظ البلاغ وفتح WhatsApp' : 'حفظ البلاغ'}</button>
+            {!phone && <p className="text-center text-sm text-amber-700">سيُحفظ البلاغ في النظام، لكن لن يفتح WhatsApp لعدم تسجيل رقم الصيانة.</p>}
           </form>
         </section>
       </div>

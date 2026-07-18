@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protect these routes
-  const isProtected = pathname === '/' || pathname.startsWith('/add') || pathname.startsWith('/edit') || pathname.startsWith('/users') || pathname.startsWith('/report');
+  const isProtected = pathname === '/' || pathname.startsWith('/add') || pathname.startsWith('/edit') || pathname.startsWith('/users') || pathname.startsWith('/report') || pathname.startsWith('/maintenance');
 
   if (isProtected && !token) {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/add', '/edit/:path*', '/users', '/report', '/login'],
+  matcher: ['/', '/add', '/edit/:path*', '/users', '/report', '/maintenance', '/login'],
 };

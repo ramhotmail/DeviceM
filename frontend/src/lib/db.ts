@@ -54,6 +54,17 @@ export async function initDb() {
     )
   `);
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS maintenance_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id INTEGER NOT NULL,
+        fault_text TEXT NOT NULL,
+        reporter_name TEXT,
+        status TEXT NOT NULL DEFAULT 'new',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   // Create default admin if no users exist
   const res = await db.execute("SELECT COUNT(*) as count FROM users");
   const count = res.rows[0].count as number;
