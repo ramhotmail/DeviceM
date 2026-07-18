@@ -25,7 +25,7 @@ export async function GET(_request: Request, context: any) {
 
 export async function PUT(request: Request, context: any) {
   const { params } = context;
-  const auth = await withAuth(request, true); // require admin
+  const auth = await withAuth(request); // any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;
@@ -69,7 +69,7 @@ export async function PUT(request: Request, context: any) {
 
 export async function DELETE(request: Request, context: any) {
   const { params } = context;
-  const auth = await withAuth(request, true); // require admin
+  const auth = await withAuth(request); // any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await params;

@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await withAuth(request, true); // Require admin
+  const auth = await withAuth(request); // Any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   try {

@@ -27,7 +27,7 @@ export default function Users() {
     try {
       const res = await fetch('/api/users');
       if (res.status === 401) return router.push('/login');
-      if (res.status === 403) return result('', 'هذه الصفحة متاحة لمدير النظام فقط.');
+      if (res.status === 403) return router.push('/');
       if (!res.ok) throw new Error();
       setUsers(await res.json());
     } catch { result('', 'تعذر تحميل المستخدمين.'); }
