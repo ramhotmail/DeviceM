@@ -27,6 +27,7 @@ export async function PUT(request: Request, context: any) {
   const { params } = context;
   const auth = await withAuth(request); // any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!['admin', 'editor'].includes(auth.user?.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { id } = await params;
   const data = await request.json();
@@ -71,6 +72,7 @@ export async function DELETE(request: Request, context: any) {
   const { params } = context;
   const auth = await withAuth(request); // any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!['admin', 'editor'].includes(auth.user?.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { id } = await params;
   const db = getDb();

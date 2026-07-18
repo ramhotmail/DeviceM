@@ -79,9 +79,11 @@ export default function Dashboard() {
               إدارة المستخدمين
             </Link>
           )}
-          <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
-            إضافة جهاز جديد +
-          </Link>
+          {['admin', 'editor'].includes(currentUser?.role) && (
+            <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
+              إضافة جهاز جديد +
+            </Link>
+          )}
           <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold transition">
             تسجيل خروج
           </button>
@@ -137,7 +139,8 @@ export default function Dashboard() {
                       <Link href={`/card/${d.id}`} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
                         عرض الكارت
                       </Link>
-                      <button
+                      {['admin', 'editor'].includes(currentUser?.role) && (
+                        <button
                           type="button"
                           onClick={() => handleDelete(d)}
                           disabled={deletingId === d.id}
@@ -145,6 +148,7 @@ export default function Dashboard() {
                         >
                           {deletingId === d.id ? 'جاري الحذف...' : 'حذف'}
                         </button>
+                      )}
                     </td>
                   </tr>
                 ))}

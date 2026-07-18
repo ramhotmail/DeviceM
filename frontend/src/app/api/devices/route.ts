@@ -36,6 +36,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const auth = await withAuth(request); // Any authenticated user
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!['admin', 'editor'].includes(auth.user?.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
     const data = await request.json();

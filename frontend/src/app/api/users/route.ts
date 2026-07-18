@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const hash = await bcrypt.hash(password, 10);
-    const userRole = role === 'admin' ? 'admin' : 'viewer';
+    const userRole = ['admin', 'editor'].includes(role) ? role : 'viewer';
 
     await db.execute({
       sql: "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
