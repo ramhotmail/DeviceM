@@ -1,101 +1,122 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+type Device = Record<string, any>;
+
+const columns: Array<[string, string]> = [
+  ['device_code', 'كود الجهاز'], ['device_name', 'اسم الجهاز'], ['location', 'القسم / المكان'],
+  ['brand', 'الماركة'], ['model', 'الموديل'], ['serial_number', 'الرقم المسلسل'],
+  ['agent_company', 'الشركة الوكيل'], ['maintenance_company', 'شركة الصيانة'],
+  ['maintenance_status', 'حالة الصيانة'], ['contract_start', 'بداية التعاقد / الضمان'],
+  ['contract_end', 'نهاية التعاقد / الضمان'], ['maintenance_officer', 'مسؤول الصيانة'],
+  ['maintenance_phone', 'هاتف مسؤول الصيانة'], ['created_at', 'تاريخ الإضافة']
+];
+
+function downloadFile(content: BlobPart, type: string, filename: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement('a');
+  link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value: unknown) {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
 
 export default function Report() {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [devices, setDevices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+  const router = useRouter();
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // In a real app we'd add an API endpoint for reports with date filters, 
-      // but for simplicity we can fetch all and filter on client side, 
-      // or modify the /api/devices route. For now let's just fetch all and filter.
-      const res = await fetch('/api/devices');
-      if (res.ok) {
-        const data = await res.json();
-        const filtered = data.filter((d: any) => {
-          if (!d.created_at) return false;
-          const date = d.created_at.split(' ')[0]; // Basic string comparison
-          return date >= fromDate && date <= toDate;
-        });
-        setDevices(filtered);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/devices');
+        if (res.status === 401) return router.push('/login');
+        if (!res.ok) throw new Error();
+        setDevices(await res.json());
+      } catch { setError('تعذر تحميل تقرير الأجهزة.'); }
+      finally { setLoading(false); }
     }
+    load();
+  }, [router]);
+
+  const filtered = useMemo(() => devices.filter(device => {
+    const term = search.trim().toLowerCase();
+    const matchesSearch = !term || [device.device_code, device.device_name, device.location, device.brand, device.model, device.serial_number].some(value => String(value || '').toLowerCase().includes(term));
+    const created = String(device.created_at || '').slice(0, 10);
+    const matchesFrom = !fromDate || (created && created >= fromDate);
+    const matchesTo = !toDate || (created && created <= toDate);
+    const matchesStatus = !status || device.maintenance_status === status;
+    return matchesSearch && matchesFrom && matchesTo && matchesStatus;
+  }), [devices, search, fromDate, toDate, status]);
+
+  const statuses = useMemo(() => Array.from(new Set(devices.map(d => d.maintenance_status).filter(Boolean))).sort(), [devices]);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const exportCsv = () => {
+    const rows = [columns.map(([, label]) => csvCell(label)).join(','), ...filtered.map(device => columns.map(([key]) => csvCell(device[key])).join(','))];
+    downloadFile(`\uFEFF${rows.join('\r\n')}`, 'text/csv;charset=utf-8', `devices-report-${today}.csv`);
   };
 
+  const exportBackup = () => {
+    const backup = { exported_at: new Date().toISOString(), total: devices.length, devices };
+    downloadFile(JSON.stringify(backup, null, 2), 'application/json;charset=utf-8', `devices-backup-${today}.json`);
+  };
+
+  const clearFilters = () => { setSearch(''); setFromDate(''); setToDate(''); setStatus(''); };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">تقرير الأجهزة المضافة</h1>
-          <Link href="/" className="text-blue-600 hover:underline font-bold">العودة للرئيسية</Link>
-        </div>
+    <main className="min-h-screen bg-slate-100 p-4 sm:p-8 print:bg-white print:p-0" dir="rtl">
+      <div className="mx-auto max-w-[1500px]">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 print:block">
+          <div><h1 className="text-2xl font-bold text-slate-900">تقرير جميع الأجهزة</h1><p className="mt-1 text-sm text-slate-500 print:text-center">قائمة الأجهزة المسجلة مع خيارات الحفظ والنسخ الاحتياطي.</p></div>
+          <Link href="/" className="rounded-lg bg-white px-4 py-2 font-bold text-blue-700 shadow-sm hover:bg-blue-50 print:hidden">العودة للرئيسية</Link>
+        </header>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <form onSubmit={handleSearch} className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-bold mb-1">من تاريخ</label>
-              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} required className="w-full border p-3 rounded outline-none focus:border-blue-500" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-bold mb-1">إلى تاريخ</label>
-              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} required className="w-full border p-3 rounded outline-none focus:border-blue-500" />
-            </div>
-            <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded font-bold hover:bg-blue-700 transition">
-              {loading ? 'جاري البحث...' : 'بحث وتوليد التقرير'}
-            </button>
-            <button type="button" onClick={() => window.print()} className="bg-gray-800 text-white px-8 py-3 rounded font-bold hover:bg-gray-900 transition ml-2">
-              طباعة
-            </button>
-          </form>
-        </div>
+        {error && <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">{error}</div>}
 
-        <div className="bg-white rounded-lg shadow p-6 print:shadow-none print:p-0">
-          <h2 className="text-xl font-bold mb-4 print:block hidden text-center">تقرير الأجهزة من {fromDate} إلى {toDate}</h2>
-          <table className="w-full text-right border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200 text-gray-700 print:bg-gray-100">
-                <th className="p-3 border border-gray-300">م</th>
-                <th className="p-3 border border-gray-300">الكود</th>
-                <th className="p-3 border border-gray-300">اسم الجهاز</th>
-                <th className="p-3 border border-gray-300">القسم</th>
-                <th className="p-3 border border-gray-300">الماركة</th>
-                <th className="p-3 border border-gray-300">تاريخ الإضافة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {devices.map((d, i) => (
-                <tr key={d.id} className="border border-gray-300">
-                  <td className="p-3 border border-gray-300">{i + 1}</td>
-                  <td className="p-3 border border-gray-300 font-semibold">{d.device_code}</td>
-                  <td className="p-3 border border-gray-300">{d.device_name}</td>
-                  <td className="p-3 border border-gray-300">{d.location}</td>
-                  <td className="p-3 border border-gray-300">{d.brand}</td>
-                  <td className="p-3 border border-gray-300" dir="ltr">{d.created_at}</td>
-                </tr>
-              ))}
-              {devices.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">لا توجد بيانات</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="mt-4 text-left font-bold text-lg text-blue-800">
-            إجمالي الأجهزة: {devices.length}
+        <section className="mb-6 grid gap-4 sm:grid-cols-3 print:hidden">
+          <div className="rounded-xl bg-blue-700 p-5 text-white shadow-sm"><div className="text-sm text-blue-100">إجمالي الأجهزة</div><div className="mt-2 text-3xl font-bold">{devices.length}</div></div>
+          <div className="rounded-xl bg-emerald-600 p-5 text-white shadow-sm"><div className="text-sm text-emerald-100">نتائج التقرير الحالية</div><div className="mt-2 text-3xl font-bold">{filtered.length}</div></div>
+          <div className="rounded-xl bg-white p-5 shadow-sm"><div className="text-sm text-slate-500">آخر تحديث للتقرير</div><div className="mt-2 font-bold text-slate-800">{new Date().toLocaleString('ar-EG')}</div></div>
+        </section>
+
+        <section className="mb-6 rounded-xl bg-white p-5 shadow-sm print:hidden">
+          <div className="grid gap-4 md:grid-cols-5 md:items-end">
+            <label className="md:col-span-2"><span className="mb-1 block text-sm font-bold">بحث</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="الاسم، الكود، المكان، الماركة، السيريال..." className="w-full rounded-lg border border-slate-300 p-2.5 outline-none focus:border-blue-500" /></label>
+            <label><span className="mb-1 block text-sm font-bold">من تاريخ</span><input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="w-full rounded-lg border border-slate-300 p-2.5" /></label>
+            <label><span className="mb-1 block text-sm font-bold">إلى تاريخ</span><input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="w-full rounded-lg border border-slate-300 p-2.5" /></label>
+            <label><span className="mb-1 block text-sm font-bold">حالة الصيانة</span><select value={status} onChange={e => setStatus(e.target.value)} className="w-full rounded-lg border border-slate-300 p-2.5"><option value="">كل الحالات</option>{statuses.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
           </div>
-        </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button onClick={exportCsv} disabled={!filtered.length} className="rounded-lg bg-green-600 px-4 py-2.5 font-bold text-white hover:bg-green-700 disabled:opacity-50">تصدير Excel / CSV</button>
+            <button onClick={exportBackup} disabled={!devices.length} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-bold text-white hover:bg-indigo-700 disabled:opacity-50">تنزيل نسخة احتياطية JSON</button>
+            <button onClick={() => window.print()} disabled={!filtered.length} className="rounded-lg bg-slate-800 px-4 py-2.5 font-bold text-white hover:bg-slate-900 disabled:opacity-50">طباعة / حفظ PDF</button>
+            <button onClick={clearFilters} className="rounded-lg bg-slate-100 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-200">مسح الفلاتر</button>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none">
+          <div className="hidden border-b p-3 text-center print:block"><h2 className="text-xl font-bold">تقرير الأجهزة الطبية</h2><p className="text-sm">إجمالي النتائج: {filtered.length} — تاريخ التقرير: {new Date().toLocaleDateString('ar-EG')}</p></div>
+          {loading ? <div className="p-12 text-center font-bold text-slate-500">جاري تحميل الأجهزة...</div> : (
+            <div className="overflow-x-auto"><table className="w-full min-w-[1150px] border-collapse text-right text-sm print:min-w-0 print:text-[9px]">
+              <thead className="bg-slate-200 text-slate-700"><tr><th className="border p-3 print:p-1">م</th>{columns.map(([, label]) => <th key={label} className="border p-3 print:p-1">{label}</th>)}</tr></thead>
+              <tbody>{filtered.map((device, index) => <tr key={device.id} className="hover:bg-slate-50"><td className="border p-3 font-bold print:p-1">{index + 1}</td>{columns.map(([key]) => <td key={key} className="max-w-[180px] border p-3 print:p-1">{device[key] || '—'}</td>)}</tr>)}</tbody>
+            </table></div>
+          )}
+          {!loading && !filtered.length && <div className="p-10 text-center text-slate-500">لا توجد أجهزة مطابقة للفلاتر الحالية.</div>}
+          <div className="border-t bg-slate-50 p-4 text-left text-lg font-bold text-blue-800">إجمالي النتائج: {filtered.length}</div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

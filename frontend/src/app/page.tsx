@@ -71,6 +71,9 @@ export default function Dashboard() {
       <nav className="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
         <div className="text-xl font-bold">لوحة التحكم - الأجهزة الطبية</div>
         <div className="flex gap-4">
+          <Link href="/report" className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded font-semibold transition">
+            تقرير الأجهزة
+          </Link>
           {currentUser?.role === 'admin' && <>
             <Link href="/users" className="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded font-semibold transition">
               إدارة المستخدمين
