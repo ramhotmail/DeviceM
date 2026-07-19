@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function Dashboard() {
       }
       const data = await res.json();
       setDevices(Array.isArray(data) ? data : []);
+      setSelectedIds([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,6 +68,18 @@ export default function Dashboard() {
     }
   };
 
+  const toggleDevice = (id: number) => {
+    setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
+  };
+
+  const toggleAll = () => {
+    setSelectedIds(current => current.length === devices.length ? [] : devices.map(device => device.id));
+  };
+
+  const printSelected = () => {
+    if (!selectedIds.length) return alert('اختر جهازًا واحدًا على الأقل للطباعة.');
+    window.open(`/print-cards?ids=${selectedIds.join(',')}`, '_blank', 'noopener,noreferrer');
+  };
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
@@ -107,6 +121,13 @@ export default function Dashboard() {
               بحث
             </button>
           </form>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+            <div className="text-sm font-bold text-slate-600">تم تحديد {selectedIds.length} من {devices.length} جهاز</div>
+            <div className="flex gap-2">
+              <button type="button" onClick={toggleAll} disabled={!devices.length} className="rounded-lg bg-slate-100 px-4 py-2 font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50">{selectedIds.length === devices.length && devices.length ? 'إلغاء تحديد الكل' : 'تحديد الكل'}</button>
+              <button type="button" onClick={printSelected} disabled={!selectedIds.length} className="rounded-lg bg-purple-700 px-5 py-2 font-bold text-white hover:bg-purple-800 disabled:opacity-50">طباعة الكروت المحددة</button>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -116,6 +137,7 @@ export default function Dashboard() {
             <table className="w-full text-right border-collapse">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">
+                  <th className="w-14 p-4 border-b text-center"><input type="checkbox" aria-label="تحديد كل الأجهزة" checked={devices.length > 0 && selectedIds.length === devices.length} onChange={toggleAll} className="h-5 w-5 accent-purple-700" /></th>
                   <th className="p-4 border-b">الكود</th>
                   <th className="p-4 border-b">اسم الجهاز</th>
                   <th className="p-4 border-b">القسم</th>
@@ -126,7 +148,8 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {devices.map(d => (
-                  <tr key={d.id} className="hover:bg-gray-50 border-b last:border-0 transition">
+                  <tr key={d.id} className={`border-b last:border-0 transition ${selectedIds.includes(d.id) ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
+                    <td className="p-4 text-center"><input type="checkbox" aria-label={`تحديد ${d.device_name || 'الجهاز'}`} checked={selectedIds.includes(d.id)} onChange={() => toggleDevice(d.id)} className="h-5 w-5 accent-purple-700" /></td>
                     <td className="p-4 font-semibold text-blue-600">{d.device_code}</td>
                     <td className="p-4">{d.device_name}</td>
                     <td className="p-4">{d.location}</td>
@@ -157,7 +180,7 @@ export default function Dashboard() {
                 ))}
                 {devices.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">لا توجد أجهزة مطابقة للبحث</td>
+                    <td colSpan={7} className="p-8 text-center text-gray-500">لا توجد أجهزة مطابقة للبحث</td>
                   </tr>
                 )}
               </tbody>

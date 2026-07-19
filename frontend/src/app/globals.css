@@ -24,3 +24,35 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0.5cm;
+  }
+
+  html, body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-cards-sheet {
+    display: grid !important;
+    grid-template-columns: repeat(3, 6cm) !important;
+    gap: 0.25cm !important;
+    width: 18.5cm !important;
+    margin: 0 auto !important;
+    align-content: start !important;
+  }
+
+  .device-print-card {
+    width: 6cm !important;
+    height: 13cm !important;
+    box-sizing: border-box !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
