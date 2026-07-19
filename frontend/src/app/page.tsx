@@ -165,7 +165,10 @@ export default function Dashboard() {
                       <Link href={`/card/${d.id}`} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
                         عرض الكارت
                       </Link>
-                      {['admin', 'editor'].includes(currentUser?.role) && (
+                      {['admin', 'editor'].includes(currentUser?.role) && (<>
+                        <Link href={`/edit/${d.id}`} className="rounded bg-amber-500 px-3 py-1 text-sm font-bold text-white transition hover:bg-amber-600">
+                          تعديل
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleDelete(d)}
@@ -174,7 +177,7 @@ export default function Dashboard() {
                         >
                           {deletingId === d.id ? 'جاري الحذف...' : 'حذف'}
                         </button>
-                      )}
+                      </>)}
                     </td>
                   </tr>
                 ))}
