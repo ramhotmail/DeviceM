@@ -78,7 +78,7 @@ export default function CardPage() {
   };
 
   const renderRow = (label: string, value: string | null) => (
-    <div className="flex items-center justify-between border-b border-gray-300 py-1 text-[10px] print:min-h-[0.34cm] print:py-0 print:text-[6.5px] print:leading-tight">
+    <div className="flex items-center justify-between border-b border-gray-300 py-1 text-[10px] print:min-h-[0.48cm] print:flex-1 print:px-[0.06cm] print:py-0 print:text-[8px] print:leading-tight">
       <div className="ml-2 whitespace-nowrap font-bold text-gray-800">{label} :</div>
       <div className="overflow-hidden text-ellipsis whitespace-nowrap font-bold text-gray-900">{value || '-'}</div>
     </div>
@@ -87,7 +87,7 @@ export default function CardPage() {
   return (
     <main className="app-page print:bg-white print:p-0" dir="rtl">`n      <AppHeader title="كارت الجهاز" subtitle="بيانات الجهاز والإبلاغ عن الأعطال" />
       <div className="mx-auto grid max-w-4xl items-start gap-6 p-4 sm:p-8 md:grid-cols-[350px_1fr] print:block print:p-0">
-        <section className="device-print-card relative mx-auto w-[350px] border-2 border-blue-950 bg-white p-4 shadow-xl print:m-0 print:h-[13cm] print:w-[6cm] print:overflow-hidden print:border-2 print:p-[0.18cm] print:shadow-none">
+        <section className="device-print-card relative mx-auto w-[350px] border-2 border-blue-950 bg-white p-4 shadow-xl print:m-0 print:flex print:h-[13cm] print:w-[6cm] print:flex-col print:overflow-hidden print:border-2 print:p-[0.18cm] print:shadow-none">
           <div className="mb-2 flex items-center justify-between border-b-2 border-gray-800 pb-1">
             <div className="text-right">
               <h1 className="whitespace-nowrap text-sm font-extrabold leading-tight text-blue-950 print:text-[8px]">مستشفيات جامعة قناة السويس</h1>
@@ -100,7 +100,7 @@ export default function CardPage() {
             {device.image_base64 ? <img src={`data:image/jpeg;base64,${device.image_base64}`} alt={device.device_name} className="h-full w-full object-contain" /> : <span className="self-center text-sm text-gray-400">لا توجد صورة للجهاز</span>}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 print:mb-[0.08cm] print:flex print:flex-1 print:flex-col print:justify-between print:overflow-hidden">
             {renderRow('اسم الجهاز', device.device_name)}
             {renderRow('كود الجهاز على النظام', device.device_code)}
             {renderRow('المكان داخل القسم', device.location)}
@@ -116,7 +116,7 @@ export default function CardPage() {
             {renderRow('تليفون مسئول الصيانة', device.maintenance_phone)}
           </div>
 
-          <div className="mt-2 flex justify-end"><div className="border border-gray-300 bg-white p-1"><QRCodeSVG value={qrUrl} size={50} /></div></div>
+          <div className="mt-2 flex justify-end print:mt-[0.08cm]"><div className="border border-gray-300 bg-white p-1"><QRCodeSVG value={qrUrl} size={52} /></div></div>
           <button onClick={() => window.print()} className="mt-6 w-full rounded-lg bg-blue-600 py-2 text-sm font-bold text-white shadow-md transition hover:bg-blue-700 print:hidden">طباعة الكارت</button>
         </section>
 
