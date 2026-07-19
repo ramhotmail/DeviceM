@@ -3,184 +3,42 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Activity, ClipboardList, FileSpreadsheet, LogOut, MonitorCog, PlusCircle, Printer, Users } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 
+function DashboardLink({ href, title, description, icon: Icon, color, delay = 0 }: any) {
+  return <Link href={href} className="nav-card group" style={{ animationDelay: `${delay}ms` }}>
+    <div className={`nav-card-icon ${color}`}><Icon size={30} strokeWidth={2.2} /></div>
+    <div className="min-w-0"><h2 className="text-lg font-black text-slate-900">{title}</h2><p className="mt-1 text-sm leading-6 text-slate-500">{description}</p></div>
+    <span className="nav-card-arrow">←</span>
+  </Link>;
+}
+
 export default function Dashboard() {
-  const [devices, setDevices] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [devices, setDevices] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    fetchDevices();
     fetch('/api/auth/me').then(res => res.ok ? res.json() : null).then(data => setCurrentUser(data?.user || null));
+    fetch('/api/devices').then(res => res.ok ? res.json() : []).then(data => setDevices(Array.isArray(data) ? data : []));
   }, []);
 
-  const fetchDevices = async (q = '') => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/devices?q=${encodeURIComponent(q)}`);
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-      const data = await res.json();
-      setDevices(Array.isArray(data) ? data : []);
-      setSelectedIds([]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const logout = async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/login'); };
+  const canEdit = ['admin', 'editor'].includes(currentUser?.role);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchDevices(search);
-  };
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-  };
-
-  const handleDelete = async (device: any) => {
-    const label = device.device_name || 'الجهاز';
-    const code = device.device_code ? ` (${device.device_code})` : '';
-    if (!window.confirm(`هل تريد حذف ${label}${code} نهائيًا؟\nلا يمكن التراجع عن الحذف.`)) return;
-
-    setDeletingId(device.id);
-    try {
-      const res = await fetch(`/api/devices/${device.id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setDevices(current => current.filter(item => item.id !== device.id));
-      } else if (res.status === 403) {
-        alert('الحذف متاح لمدير النظام فقط.');
-      } else {
-        alert('تعذر حذف الجهاز. حاول مرة أخرى.');
-      }
-    } catch {
-      alert('تعذر الاتصال بالخادم.');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const toggleDevice = (id: number) => {
-    setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
-  };
-
-  const toggleAll = () => {
-    setSelectedIds(current => current.length === devices.length ? [] : devices.map(device => device.id));
-  };
-
-  const printSelected = () => {
-    if (!selectedIds.length) return alert('اختر جهازًا واحدًا على الأقل للطباعة.');
-    window.open(`/print-cards?ids=${selectedIds.join(',')}`, '_blank', 'noopener,noreferrer');
-  };
-  return (
-    <div className="app-page">
-      <AppHeader showHome={false}>
-        <Link href="/maintenance" className="header-button bg-amber-500 hover:bg-amber-600">بلاغات الصيانة</Link>
-        <Link href="/report" className="header-button bg-cyan-600 hover:bg-cyan-700">تقرير الأجهزة</Link>
-        {currentUser?.role === 'admin' && <Link href="/users" className="header-button bg-slate-600 hover:bg-slate-700">إدارة المستخدمين</Link>}
-        {['admin', 'editor'].includes(currentUser?.role) && <Link href="/add" className="header-button bg-emerald-600 hover:bg-emerald-700">إضافة جهاز +</Link>}
-        <button onClick={handleLogout} className="header-button bg-red-600 hover:bg-red-700">تسجيل خروج</button>
-      </AppHeader>
-
-      <main className="mx-auto max-w-7xl p-4 sm:p-8">
-        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="dashboard-card bg-gradient-to-br from-blue-700 to-blue-500"><div className="text-sm font-bold text-blue-100">إجمالي الأجهزة</div><div className="mt-3 text-4xl font-black">{devices.length}</div><div className="mt-2 text-xs text-blue-100">جهاز مسجل بالنظام</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-emerald-700 to-emerald-500"><div className="text-sm font-bold text-emerald-100">عقد صيانة</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'عقد صيانة').length}</div><div className="mt-2 text-xs text-emerald-100">أجهزة تحت عقد صيانة</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-amber-600 to-orange-400"><div className="text-sm font-bold text-amber-50">داخل الضمان</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'ضمان').length}</div><div className="mt-2 text-xs text-amber-50">أجهزة ما زالت في الضمان</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-purple-700 to-fuchsia-500"><div className="text-sm font-bold text-purple-100">نتائج التحديد</div><div className="mt-3 text-4xl font-black">{selectedIds.length}</div><div className="mt-2 text-xs text-purple-100">كارت محدد للطباعة</div></div>
-        </section>
-        <div className="surface-panel mb-6 p-5 sm:p-6">
-          <form onSubmit={handleSearch} className="flex gap-4">
-            <input 
-              type="text" 
-              placeholder="ابحث باسم الجهاز، الكود، أو السيريال..." 
-              className="flex-1 border border-gray-300 p-3 rounded outline-none focus:border-blue-500 transition"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-bold transition">
-              بحث
-            </button>
-          </form>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-            <div className="text-sm font-bold text-slate-600">تم تحديد {selectedIds.length} من {devices.length} جهاز</div>
-            <div className="flex gap-2">
-              <button type="button" onClick={toggleAll} disabled={!devices.length} className="rounded-lg bg-slate-100 px-4 py-2 font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50">{selectedIds.length === devices.length && devices.length ? 'إلغاء تحديد الكل' : 'تحديد الكل'}</button>
-              <button type="button" onClick={printSelected} disabled={!selectedIds.length} className="rounded-lg bg-purple-700 px-5 py-2 font-bold text-white hover:bg-purple-800 disabled:opacity-50">طباعة الكروت المحددة</button>
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center p-10 font-bold text-gray-500">جاري التحميل...</div>
-        ) : (
-          <div className="surface-panel overflow-hidden">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="bg-gray-200 text-gray-700">
-                  <th className="w-14 p-4 border-b text-center"><input type="checkbox" aria-label="تحديد كل الأجهزة" checked={devices.length > 0 && selectedIds.length === devices.length} onChange={toggleAll} className="h-5 w-5 accent-purple-700" /></th>
-                  <th className="p-4 border-b">الكود</th>
-                  <th className="p-4 border-b">اسم الجهاز</th>
-                  <th className="p-4 border-b">القسم</th>
-                  <th className="p-4 border-b">الماركة</th>
-                  <th className="p-4 border-b">حالة الصيانة</th>
-                  <th className="p-4 border-b text-center">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {devices.map(d => (
-                  <tr key={d.id} className={`border-b last:border-0 transition ${selectedIds.includes(d.id) ? 'bg-purple-50' : 'hover:bg-gray-50'}`}>
-                    <td className="p-4 text-center"><input type="checkbox" aria-label={`تحديد ${d.device_name || 'الجهاز'}`} checked={selectedIds.includes(d.id)} onChange={() => toggleDevice(d.id)} className="h-5 w-5 accent-purple-700" /></td>
-                    <td className="p-4 font-semibold text-blue-600">{d.device_code}</td>
-                    <td className="p-4">{d.device_name}</td>
-                    <td className="p-4">{d.location}</td>
-                    <td className="p-4">{d.brand}</td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        d.maintenance_status === 'عقد صيانة' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {d.maintenance_status}
-                      </span>
-                    </td>
-                    <td className="p-4 flex gap-2 justify-center">
-                      <Link href={`/card/${d.id}`} className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition">
-                        عرض الكارت
-                      </Link>
-                      {['admin', 'editor'].includes(currentUser?.role) && (<>
-                        <Link href={`/edit/${d.id}`} className="rounded bg-amber-500 px-3 py-1 text-sm font-bold text-white transition hover:bg-amber-600">
-                          تعديل
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(d)}
-                          disabled={deletingId === d.id}
-                          className="rounded bg-red-600 px-3 py-1 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-wait disabled:bg-red-300"
-                        >
-                          {deletingId === d.id ? 'جاري الحذف...' : 'حذف'}
-                        </button>
-                      </>)}
-                    </td>
-                  </tr>
-                ))}
-                {devices.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500">لا توجد أجهزة مطابقة للبحث</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+  return <main className="app-page" dir="rtl">
+    <AppHeader showHome={false}><div className="hidden text-sm font-bold text-blue-100 sm:block">مرحبًا، {currentUser?.username || 'المستخدم'}</div><button onClick={logout} className="header-button flex items-center gap-2 bg-red-600 hover:bg-red-700"><LogOut size={16} /> تسجيل خروج</button></AppHeader>
+    <div className="mx-auto max-w-7xl p-4 sm:p-8">
+      <section className="dashboard-hero mb-7"><div><span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-700">لوحة التحكم الرئيسية</span><h1 className="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">نظام إدارة الأجهزة الطبية</h1><p className="mt-3 max-w-2xl leading-7 text-slate-600">اختر القسم المطلوب من البطاقات التالية للوصول السريع إلى جميع وظائف البرنامج.</p></div><div className="hero-stat"><Activity size={28} /><strong>{devices.length}</strong><span>جهاز مسجل</span></div></section>
+      <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <DashboardLink href="/devices" title="صفحة الأجهزة" description="عرض الأجهزة، البحث، التعديل، الحذف وطباعة الكروت المحددة." icon={MonitorCog} color="bg-blue-600" delay={0} />
+        <DashboardLink href="/maintenance" title="بلاغات الصيانة" description="متابعة الأعطال الجديدة وحالات الإصلاح والبلاغات المكتملة." icon={ClipboardList} color="bg-amber-500" delay={70} />
+        <DashboardLink href="/report" title="تقارير الأجهزة" description="عرض التقرير الشامل وتصدير Excel وJSON والحفظ PDF." icon={FileSpreadsheet} color="bg-cyan-600" delay={140} />
+        <DashboardLink href="/devices" title="طباعة الكروت" description="حدد الأجهزة المطلوبة ثم اطبع كروت 6 × 13 سم بالألوان." icon={Printer} color="bg-purple-600" delay={210} />
+        {canEdit && <DashboardLink href="/add" title="إضافة جهاز" description="تسجيل جهاز جديد وبيانات الصيانة وإنشاء رمز QR." icon={PlusCircle} color="bg-emerald-600" delay={280} />}
+        {currentUser?.role === 'admin' && <DashboardLink href="/users" title="إدارة المستخدمين" description="إنشاء الحسابات وتعديل الصلاحيات وكلمات المرور." icon={Users} color="bg-slate-700" delay={350} />}
+      </section>
     </div>
-  );
+  </main>;
 }
