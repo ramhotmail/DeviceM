@@ -26,11 +26,32 @@ export default function Dashboard() {
 
   const logout = async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/login'); };
   const canEdit = ['admin', 'editor'].includes(currentUser?.role);
+  const maintenanceData = [
+    { label: 'عقد صيانة', count: devices.filter(d => d.maintenance_status === 'عقد صيانة').length, color: 'bg-emerald-500' },
+    { label: 'ضمان', count: devices.filter(d => d.maintenance_status === 'ضمان').length, color: 'bg-amber-500' },
+    { label: 'خارج الضمان', count: devices.filter(d => d.maintenance_status === 'خارج الضمان').length, color: 'bg-red-500' },
+    { label: 'غير محدد', count: devices.filter(d => !d.maintenance_status).length, color: 'bg-slate-400' }
+  ];
+  const maxCount = Math.max(1, ...maintenanceData.map(item => item.count));
 
   return <main className="app-page" dir="rtl">
     <AppHeader showHome={false}><div className="hidden text-sm font-bold text-blue-100 sm:block">مرحبًا، {currentUser?.username || 'المستخدم'}</div><button onClick={logout} className="header-button flex items-center gap-2 bg-red-600 hover:bg-red-700"><LogOut size={16} /> تسجيل خروج</button></AppHeader>
     <div className="mx-auto max-w-7xl p-4 sm:p-8">
       <section className="dashboard-hero mb-7"><div><span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-700">لوحة التحكم الرئيسية</span><h1 className="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">نظام إدارة الأجهزة الطبية</h1><p className="mt-3 max-w-2xl leading-7 text-slate-600">اختر القسم المطلوب من البطاقات التالية للوصول السريع إلى جميع وظائف البرنامج.</p></div><div className="hero-stat"><Activity size={28} /><strong>{devices.length}</strong><span>جهاز مسجل</span></div></section>
+
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="dashboard-card bg-gradient-to-br from-blue-700 to-blue-500"><div className="text-sm font-bold text-blue-100">إجمالي الأجهزة</div><div className="mt-3 text-4xl font-black">{devices.length}</div><div className="mt-2 text-xs text-blue-100">جهاز مسجل بالنظام</div></div>
+        <div className="dashboard-card bg-gradient-to-br from-emerald-700 to-emerald-500"><div className="text-sm font-bold text-emerald-100">عقد صيانة</div><div className="mt-3 text-4xl font-black">{maintenanceData[0].count}</div><div className="mt-2 text-xs text-emerald-100">أجهزة تحت عقد صيانة</div></div>
+        <div className="dashboard-card bg-gradient-to-br from-amber-600 to-orange-400"><div className="text-sm font-bold text-amber-50">داخل الضمان</div><div className="mt-3 text-4xl font-black">{maintenanceData[1].count}</div><div className="mt-2 text-xs text-amber-50">أجهزة ما زالت في الضمان</div></div>
+        <div className="dashboard-card bg-gradient-to-br from-red-700 to-rose-500"><div className="text-sm font-bold text-red-100">خارج الضمان</div><div className="mt-3 text-4xl font-black">{maintenanceData[2].count}</div><div className="mt-2 text-xs text-red-100">أجهزة خارج التغطية</div></div>
+      </section>
+
+      <section className="surface-panel mb-8 p-5 sm:p-7">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><span className="text-xs font-black text-blue-600">تحليل مباشر</span><h2 className="mt-1 text-xl font-black text-slate-900">توزيع الأجهزة حسب حالة الصيانة</h2></div><div className="text-sm font-bold text-slate-500">إجمالي البيانات: {devices.length}</div></div>
+        <div className="space-y-5">{maintenanceData.map(item => <div key={item.label} className="chart-row"><div className="flex items-center justify-between gap-3 text-sm"><span className="font-bold text-slate-700">{item.label}</span><span className="font-black text-slate-950">{item.count} جهاز</span></div><div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-100"><div className={`chart-bar h-full rounded-full ${item.color}`} style={{ width: `${item.count ? Math.max(8, (item.count / maxCount) * 100) : 0}%` }} /></div><div className="mt-1 text-left text-xs font-bold text-slate-400">{devices.length ? Math.round((item.count / devices.length) * 100) : 0}%</div></div>)}</div>
+      </section>
+
+      <div className="mb-4"><span className="text-xs font-black text-blue-600">التنقل</span><h2 className="mt-1 text-2xl font-black text-slate-900">روابط سريعة</h2></div>
       <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <DashboardLink href="/devices" title="صفحة الأجهزة" description="عرض الأجهزة، البحث، التعديل، الحذف وطباعة الكروت المحددة." icon={MonitorCog} color="bg-blue-600" delay={0} />
         <DashboardLink href="/maintenance" title="بلاغات الصيانة" description="متابعة الأعطال الجديدة وحالات الإصلاح والبلاغات المكتملة." icon={ClipboardList} color="bg-amber-500" delay={70} />

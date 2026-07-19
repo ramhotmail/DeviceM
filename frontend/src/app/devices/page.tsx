@@ -89,13 +89,7 @@ export default function DevicesPage() {
       </AppHeader>
 
       <main className="mx-auto max-w-7xl p-4 sm:p-8">
-        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="dashboard-card bg-gradient-to-br from-blue-700 to-blue-500"><div className="text-sm font-bold text-blue-100">إجمالي الأجهزة</div><div className="mt-3 text-4xl font-black">{devices.length}</div><div className="mt-2 text-xs text-blue-100">جهاز مسجل بالنظام</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-emerald-700 to-emerald-500"><div className="text-sm font-bold text-emerald-100">عقد صيانة</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'عقد صيانة').length}</div><div className="mt-2 text-xs text-emerald-100">أجهزة تحت عقد صيانة</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-amber-600 to-orange-400"><div className="text-sm font-bold text-amber-50">داخل الضمان</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'ضمان').length}</div><div className="mt-2 text-xs text-amber-50">أجهزة ما زالت في الضمان</div></div>
-          <div className="dashboard-card bg-gradient-to-br from-purple-700 to-fuchsia-500"><div className="text-sm font-bold text-purple-100">نتائج التحديد</div><div className="mt-3 text-4xl font-black">{selectedIds.length}</div><div className="mt-2 text-xs text-purple-100">كارت محدد للطباعة</div></div>
-        </section>
-        <div className="surface-panel mb-6 p-5 sm:p-6">
+       <div className="surface-panel mb-6 p-5 sm:p-6">
           <form onSubmit={handleSearch} className="flex gap-4">
             <input 
               type="text" 
