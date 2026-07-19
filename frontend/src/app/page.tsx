@@ -46,16 +46,7 @@ export default function Dashboard() {
         <div className="dashboard-card bg-gradient-to-br from-red-700 to-rose-500"><div className="text-sm font-bold text-red-100">خارج الضمان</div><div className="mt-3 text-4xl font-black">{maintenanceData[2].count}</div><div className="mt-2 text-xs text-red-100">أجهزة خارج التغطية</div></div>
       </section>
 
-      <section className="surface-panel mb-8 p-5 sm:p-7">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><span className="text-xs font-black text-blue-600">تحليل مباشر</span><h2 className="mt-1 text-xl font-black text-slate-900">توزيع الأجهزة حسب حالة الصيانة</h2></div><div className="text-sm font-bold text-slate-500">إجمالي البيانات: {devices.length}</div></div>
-        <div className="vertical-chart" aria-label="رسم رأسي لحالات صيانة الأجهزة">
-          {maintenanceData.map((item, index) => <div key={item.label} className="vertical-chart-column group" style={{ animationDelay: `${index * 100}ms` }}>
-            <div className="mb-2 text-center"><strong className="block text-lg font-black text-slate-900">{item.count}</strong><span className="text-xs font-bold text-slate-400">{devices.length ? Math.round((item.count / devices.length) * 100) : 0}%</span></div>
-            <div className="vertical-chart-track"><div className={`vertical-chart-bar ${item.color}`} style={{ height: `${item.count ? Math.max(12, (item.count / maxCount) * 100) : 3}%` }}><span className="chart-tooltip">{item.count} جهاز</span></div></div>
-            <div className="mt-3 min-h-10 text-center text-sm font-black text-slate-700">{item.label}</div>
-          </div>)}
-        </div>
-      </section>
+
 
       <div className="mb-4"><span className="text-xs font-black text-blue-600">التنقل</span><h2 className="mt-1 text-2xl font-black text-slate-900">روابط سريعة</h2></div>
       <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -65,6 +56,17 @@ export default function Dashboard() {
         <DashboardLink href="/devices" title="طباعة الكروت" description="حدد الأجهزة المطلوبة ثم اطبع كروت 6 × 13 سم بالألوان." icon={Printer} color="bg-purple-600" delay={210} />
         {canEdit && <DashboardLink href="/add" title="إضافة جهاز" description="تسجيل جهاز جديد وبيانات الصيانة وإنشاء رمز QR." icon={PlusCircle} color="bg-emerald-600" delay={280} />}
         {currentUser?.role === 'admin' && <DashboardLink href="/users" title="إدارة المستخدمين" description="إنشاء الحسابات وتعديل الصلاحيات وكلمات المرور." icon={Users} color="bg-slate-700" delay={350} />}
+      </section>
+
+      <section className="surface-panel mb-8 mt-8 p-5 sm:p-7">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><span className="text-xs font-black text-blue-600">تحليل مباشر</span><h2 className="mt-1 text-xl font-black text-slate-900">توزيع الأجهزة حسب حالة الصيانة</h2></div><div className="text-sm font-bold text-slate-500">إجمالي البيانات: {devices.length}</div></div>
+        <div className="vertical-chart" aria-label="رسم رأسي لحالات صيانة الأجهزة">
+          {maintenanceData.map((item, index) => <div key={item.label} className="vertical-chart-column group" style={{ animationDelay: `${index * 100}ms` }}>
+            <div className="mb-2 text-center"><strong className="block text-lg font-black text-slate-900">{item.count}</strong><span className="text-xs font-bold text-slate-400">{devices.length ? Math.round((item.count / devices.length) * 100) : 0}%</span></div>
+            <div className="vertical-chart-track"><div className={`vertical-chart-bar ${item.color}`} style={{ height: `${item.count ? Math.max(12, (item.count / maxCount) * 100) : 3}%` }}><span className="chart-tooltip">{item.count} جهاز</span></div></div>
+            <div className="mt-3 min-h-10 text-center text-sm font-black text-slate-700">{item.label}</div>
+          </div>)}
+        </div>
       </section>
     </div>
   </main>;
