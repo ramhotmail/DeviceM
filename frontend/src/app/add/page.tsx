@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AppHeader from '@/components/AppHeader';
 
 export default function AddDevice() {
   const router = useRouter();
@@ -68,8 +69,8 @@ export default function AddDevice() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+    <div className="app-page">`n      <AppHeader title="إضافة جهاز جديد" subtitle="تسجيل جهاز طبي وإنشاء كارت QR" />
+      <div className="surface-panel mx-auto mt-6 max-w-4xl p-5 sm:p-8">
         <div className="flex justify-between items-center mb-6 pb-4 border-b">
           <h1 className="text-2xl font-bold text-gray-800">إضافة جهاز جديد</h1>
           <Link href="/" className="text-blue-600 hover:underline font-bold">العودة للرئيسية</Link>

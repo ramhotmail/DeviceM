@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/AppHeader';
 
 type Report = Record<string, any>;
 const statusLabel: Record<string, string> = { new: 'جديد', in_progress: 'جارٍ العمل', completed: 'مكتمل' };
@@ -55,7 +56,7 @@ export default function MaintenanceReports() {
   const counts = (status: string) => reports.filter(report => report.status === status).length;
   const canUpdate = ['admin', 'editor'].includes(role);
 
-  return <main className="min-h-screen bg-slate-100 p-4 sm:p-8" dir="rtl"><div className="mx-auto max-w-7xl">
+  return <main className="app-page" dir="rtl"><AppHeader title="متابعة بلاغات الصيانة" subtitle="متابعة الأعطال وحالات الإصلاح" /><div className="mx-auto max-w-7xl p-4 sm:p-8">
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4"><div><h1 className="text-2xl font-bold text-slate-900">متابعة بلاغات الصيانة</h1><p className="mt-1 text-sm text-slate-500">جميع البلاغات المحفوظة من صفحات QR.</p></div><Link href="/" className="rounded-lg bg-white px-4 py-2 font-bold text-blue-700 shadow-sm">العودة للرئيسية</Link></header>
     {error && <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-red-700">{error}</div>}
     <section className="mb-6 grid gap-4 sm:grid-cols-4"><button onClick={() => setFilter('')} className="rounded-xl bg-blue-700 p-5 text-right text-white"><span className="text-sm text-blue-100">كل البلاغات</span><strong className="mt-2 block text-3xl">{reports.length}</strong></button><button onClick={() => setFilter('new')} className="rounded-xl bg-red-600 p-5 text-right text-white"><span className="text-sm text-red-100">بلاغات جديدة</span><strong className="mt-2 block text-3xl">{counts('new')}</strong></button><button onClick={() => setFilter('in_progress')} className="rounded-xl bg-amber-500 p-5 text-right text-white"><span className="text-sm text-amber-50">جارٍ العمل</span><strong className="mt-2 block text-3xl">{counts('in_progress')}</strong></button><button onClick={() => setFilter('completed')} className="rounded-xl bg-green-600 p-5 text-right text-white"><span className="text-sm text-green-100">مكتملة</span><strong className="mt-2 block text-3xl">{counts('completed')}</strong></button></section>

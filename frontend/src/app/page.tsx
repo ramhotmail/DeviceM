@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/AppHeader';
 
 export default function Dashboard() {
   const [devices, setDevices] = useState<any[]>([]);
@@ -81,34 +82,23 @@ export default function Dashboard() {
     window.open(`/print-cards?ids=${selectedIds.join(',')}`, '_blank', 'noopener,noreferrer');
   };
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center">
-        <div className="text-xl font-bold">لوحة التحكم - الأجهزة الطبية</div>
-        <div className="flex gap-4">
-          <Link href="/maintenance" className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded font-semibold transition">
-            بلاغات الصيانة
-          </Link>
-          <Link href="/report" className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded font-semibold transition">
-            تقرير الأجهزة
-          </Link>
-          {currentUser?.role === 'admin' && (
-            <Link href="/users" className="bg-slate-600 hover:bg-slate-700 px-4 py-2 rounded font-semibold transition">
-              إدارة المستخدمين
-            </Link>
-          )}
-          {['admin', 'editor'].includes(currentUser?.role) && (
-            <Link href="/add" className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold transition">
-              إضافة جهاز جديد +
-            </Link>
-          )}
-          <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold transition">
-            تسجيل خروج
-          </button>
-        </div>
-      </nav>
+    <div className="app-page">
+      <AppHeader showHome={false}>
+        <Link href="/maintenance" className="header-button bg-amber-500 hover:bg-amber-600">بلاغات الصيانة</Link>
+        <Link href="/report" className="header-button bg-cyan-600 hover:bg-cyan-700">تقرير الأجهزة</Link>
+        {currentUser?.role === 'admin' && <Link href="/users" className="header-button bg-slate-600 hover:bg-slate-700">إدارة المستخدمين</Link>}
+        {['admin', 'editor'].includes(currentUser?.role) && <Link href="/add" className="header-button bg-emerald-600 hover:bg-emerald-700">إضافة جهاز +</Link>}
+        <button onClick={handleLogout} className="header-button bg-red-600 hover:bg-red-700">تسجيل خروج</button>
+      </AppHeader>
 
-      <main className="p-8 max-w-7xl mx-auto">
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+      <main className="mx-auto max-w-7xl p-4 sm:p-8">
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="dashboard-card bg-gradient-to-br from-blue-700 to-blue-500"><div className="text-sm font-bold text-blue-100">إجمالي الأجهزة</div><div className="mt-3 text-4xl font-black">{devices.length}</div><div className="mt-2 text-xs text-blue-100">جهاز مسجل بالنظام</div></div>
+          <div className="dashboard-card bg-gradient-to-br from-emerald-700 to-emerald-500"><div className="text-sm font-bold text-emerald-100">عقد صيانة</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'عقد صيانة').length}</div><div className="mt-2 text-xs text-emerald-100">أجهزة تحت عقد صيانة</div></div>
+          <div className="dashboard-card bg-gradient-to-br from-amber-600 to-orange-400"><div className="text-sm font-bold text-amber-50">داخل الضمان</div><div className="mt-3 text-4xl font-black">{devices.filter(d => d.maintenance_status === 'ضمان').length}</div><div className="mt-2 text-xs text-amber-50">أجهزة ما زالت في الضمان</div></div>
+          <div className="dashboard-card bg-gradient-to-br from-purple-700 to-fuchsia-500"><div className="text-sm font-bold text-purple-100">نتائج التحديد</div><div className="mt-3 text-4xl font-black">{selectedIds.length}</div><div className="mt-2 text-xs text-purple-100">كارت محدد للطباعة</div></div>
+        </section>
+        <div className="surface-panel mb-6 p-5 sm:p-6">
           <form onSubmit={handleSearch} className="flex gap-4">
             <input 
               type="text" 
@@ -133,7 +123,7 @@ export default function Dashboard() {
         {loading ? (
           <div className="text-center p-10 font-bold text-gray-500">جاري التحميل...</div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="surface-panel overflow-hidden">
             <table className="w-full text-right border-collapse">
               <thead>
                 <tr className="bg-gray-200 text-gray-700">

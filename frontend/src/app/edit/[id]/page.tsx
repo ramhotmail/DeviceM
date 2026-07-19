@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AppHeader from '@/components/AppHeader';
 
 const initialData = { org_name: '', system_name: '', device_name: '', device_code: '', location: '', brand: '', model: '', serial_number: '', agent_company: '', maintenance_company: '', maintenance_status: '', contract_start: '', contract_end: '', maintenance_officer: '', maintenance_phone: '', image_base64: '' };
 const fields = [
@@ -52,7 +53,7 @@ export default function EditDevice() {
   };
 
   if (loading) return <div className="p-12 text-center font-bold">جاري تحميل بيانات الجهاز...</div>;
-  return <main className="min-h-screen bg-slate-100 p-4 sm:p-8" dir="rtl"><div className="mx-auto max-w-4xl rounded-2xl bg-white p-5 shadow-lg sm:p-8">
+  return <main className="app-page" dir="rtl"><AppHeader title="تعديل بيانات الجهاز" subtitle="تحديث بيانات الجهاز والصيانة" /><div className="surface-panel mx-auto mt-6 max-w-4xl p-5 sm:p-8">
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-4"><div><h1 className="text-2xl font-bold text-slate-900">تعديل بيانات الجهاز</h1><p className="mt-1 text-sm text-slate-500">عدّل البيانات المطلوبة ثم اضغط حفظ.</p></div><div className="flex gap-2"><Link href={`/card/${id}`} className="rounded-lg bg-blue-50 px-4 py-2 font-bold text-blue-700">عرض الكارت</Link><Link href="/" className="rounded-lg bg-slate-100 px-4 py-2 font-bold">إلغاء</Link></div></header>
     {error && <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 font-bold text-red-700">{error}</div>}
     <form onSubmit={submit} className="grid grid-cols-1 gap-5 md:grid-cols-2">

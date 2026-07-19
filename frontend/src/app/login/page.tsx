@@ -37,9 +37,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div className="text-center mb-8">
+    <div className="app-page flex items-center justify-center p-4">
+      <div className="surface-panel w-full max-w-md p-8">
+        <div className="mb-8 text-center">`n          <img src="/ramadan.png" alt="Ramadan Programming" className="mx-auto mb-6 h-16 w-auto object-contain" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">نظام تكويد الأجهزة الطبية</h1>
           <p className="text-gray-500">تسجيل الدخول للمتابعة</p>
         </div>

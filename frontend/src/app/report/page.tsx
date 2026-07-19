@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/AppHeader';
 
 type Device = Record<string, any>;
 
@@ -75,8 +76,8 @@ export default function Report() {
   const clearFilters = () => { setSearch(''); setFromDate(''); setToDate(''); setStatus(''); };
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 sm:p-8 print:bg-white print:p-0" dir="rtl">
-      <div className="mx-auto max-w-[1500px]">
+    <main className="app-page print:bg-white" dir="rtl"><AppHeader title="تقرير الأجهزة" subtitle="التقارير والتصدير والنسخ الاحتياطي" />
+      <div className="mx-auto max-w-[1500px] p-4 sm:p-8 print:p-0">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4 print:block">
           <div><h1 className="text-2xl font-bold text-slate-900">تقرير جميع الأجهزة</h1><p className="mt-1 text-sm text-slate-500 print:text-center">قائمة الأجهزة المسجلة مع خيارات الحفظ والنسخ الاحتياطي.</p></div>
           <Link href="/" className="rounded-lg bg-white px-4 py-2 font-bold text-blue-700 shadow-sm hover:bg-blue-50 print:hidden">العودة للرئيسية</Link>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
+import AppHeader from '@/components/AppHeader';
 
 function whatsappNumber(value: string) {
   let phone = (value || '').replace(/\D/g, '');
@@ -84,8 +85,8 @@ export default function CardPage() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 sm:p-8 print:bg-white print:p-0" dir="rtl">
-      <div className="mx-auto grid max-w-4xl items-start gap-6 md:grid-cols-[350px_1fr] print:block">
+    <main className="app-page print:bg-white print:p-0" dir="rtl">`n      <AppHeader title="كارت الجهاز" subtitle="بيانات الجهاز والإبلاغ عن الأعطال" />
+      <div className="mx-auto grid max-w-4xl items-start gap-6 p-4 sm:p-8 md:grid-cols-[350px_1fr] print:block print:p-0">
         <section className="device-print-card relative mx-auto w-[350px] border-2 border-blue-950 bg-white p-4 shadow-xl print:m-0 print:h-[13cm] print:w-[6cm] print:overflow-hidden print:border-2 print:p-[0.18cm] print:shadow-none">
           <div className="mb-2 flex items-center justify-between border-b-2 border-gray-800 pb-1">
             <div className="text-right">

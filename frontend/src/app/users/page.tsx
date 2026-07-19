@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/AppHeader';
 
 type Role = 'admin' | 'editor' | 'viewer';
 type User = { id: number; username: string; role: Role; created_at: string };
@@ -83,7 +84,7 @@ export default function Users() {
     else result('', 'تعذر الحذف. لا يمكنك حذف حسابك الحالي.');
   };
 
-  return <main className="min-h-screen bg-slate-100 p-4 sm:p-8" dir="rtl"><div className="mx-auto max-w-5xl">
+  return <main className="app-page" dir="rtl"><AppHeader title="إدارة المستخدمين" subtitle="الحسابات والصلاحيات وكلمات المرور" /><div className="mx-auto max-w-5xl p-4 sm:p-8">
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-bold text-slate-900">إدارة المستخدمين</h1><p className="mt-1 text-sm text-slate-500">إنشاء المستخدمين وتعديل أسمائهم وصلاحياتهم وكلمات المرور.</p></div><Link href="/" className="rounded-lg bg-white px-4 py-2 font-bold text-blue-700 shadow-sm">العودة للرئيسية</Link></header>
     {message && <div className="mb-5 rounded-lg border border-green-200 bg-green-50 p-3 text-green-800">{message}</div>}{error && <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800">{error}</div>}
 

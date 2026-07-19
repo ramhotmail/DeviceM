@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
+import AppHeader from '@/components/AppHeader';
 
 function PrintCard({ device, origin }: { device: any; origin: string }) {
   const qrUrl = `${origin}/card/${device.id}`;
@@ -30,8 +31,8 @@ export default function PrintCardsPage() {
   }, []);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return <main className="min-h-screen bg-slate-100 p-4 print:bg-white print:p-0" dir="rtl">
-    <div className="mx-auto mb-6 flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm print:hidden"><div><h1 className="text-xl font-bold">طباعة كروت الأجهزة المحددة</h1><p className="text-sm text-slate-500">عدد الكروت: {devices.length} — المقاس: 6 × 13 سم</p></div><div className="flex gap-2"><Link href="/" className="rounded-lg bg-slate-100 px-4 py-2 font-bold">العودة</Link><button onClick={() => window.print()} disabled={!devices.length} className="rounded-lg bg-blue-700 px-5 py-2 font-bold text-white disabled:opacity-50">طباعة بالألوان</button></div></div>
+  return <main className="app-page print:bg-white print:p-0" dir="rtl">`n    <AppHeader title="طباعة كروت الأجهزة" subtitle="تجهيز الكروت المحددة للطباعة الملونة" />
+    <div className="mx-auto mb-6 mt-6 flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm print:hidden"><div><h1 className="text-xl font-bold">طباعة كروت الأجهزة المحددة</h1><p className="text-sm text-slate-500">عدد الكروت: {devices.length} — المقاس: 6 × 13 سم</p></div><div className="flex gap-2"><Link href="/" className="rounded-lg bg-slate-100 px-4 py-2 font-bold">العودة</Link><button onClick={() => window.print()} disabled={!devices.length} className="rounded-lg bg-blue-700 px-5 py-2 font-bold text-white disabled:opacity-50">طباعة بالألوان</button></div></div>
     {loading && <div className="p-12 text-center font-bold">جاري تجهيز الكروت...</div>}{error && <div className="p-12 text-center font-bold text-red-600">{error}</div>}
     <section className="print-cards-sheet mx-auto grid w-fit grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-[0.25cm]">{devices.map(device => <PrintCard key={device.id} device={device} origin={origin} />)}</section>
   </main>;
