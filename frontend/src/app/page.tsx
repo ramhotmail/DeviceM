@@ -48,7 +48,13 @@ export default function Dashboard() {
 
       <section className="surface-panel mb-8 p-5 sm:p-7">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><span className="text-xs font-black text-blue-600">تحليل مباشر</span><h2 className="mt-1 text-xl font-black text-slate-900">توزيع الأجهزة حسب حالة الصيانة</h2></div><div className="text-sm font-bold text-slate-500">إجمالي البيانات: {devices.length}</div></div>
-        <div className="space-y-5">{maintenanceData.map(item => <div key={item.label} className="chart-row"><div className="flex items-center justify-between gap-3 text-sm"><span className="font-bold text-slate-700">{item.label}</span><span className="font-black text-slate-950">{item.count} جهاز</span></div><div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-100"><div className={`chart-bar h-full rounded-full ${item.color}`} style={{ width: `${item.count ? Math.max(8, (item.count / maxCount) * 100) : 0}%` }} /></div><div className="mt-1 text-left text-xs font-bold text-slate-400">{devices.length ? Math.round((item.count / devices.length) * 100) : 0}%</div></div>)}</div>
+        <div className="vertical-chart" aria-label="رسم رأسي لحالات صيانة الأجهزة">
+          {maintenanceData.map((item, index) => <div key={item.label} className="vertical-chart-column group" style={{ animationDelay: `${index * 100}ms` }}>
+            <div className="mb-2 text-center"><strong className="block text-lg font-black text-slate-900">{item.count}</strong><span className="text-xs font-bold text-slate-400">{devices.length ? Math.round((item.count / devices.length) * 100) : 0}%</span></div>
+            <div className="vertical-chart-track"><div className={`vertical-chart-bar ${item.color}`} style={{ height: `${item.count ? Math.max(12, (item.count / maxCount) * 100) : 3}%` }}><span className="chart-tooltip">{item.count} جهاز</span></div></div>
+            <div className="mt-3 min-h-10 text-center text-sm font-black text-slate-700">{item.label}</div>
+          </div>)}
+        </div>
       </section>
 
       <div className="mb-4"><span className="text-xs font-black text-blue-600">التنقل</span><h2 className="mt-1 text-2xl font-black text-slate-900">روابط سريعة</h2></div>
