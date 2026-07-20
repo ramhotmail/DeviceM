@@ -35,6 +35,8 @@ export default function Report() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [status, setStatus] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupMessage, setBackupMessage] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -68,9 +70,38 @@ export default function Report() {
     downloadFile(`\uFEFF${rows.join('\r\n')}`, 'text/csv;charset=utf-8', `devices-report-${today}.csv`);
   };
 
-  const exportBackup = () => {
-    const backup = { exported_at: new Date().toISOString(), total: devices.length, devices };
-    downloadFile(JSON.stringify(backup, null, 2), 'application/json;charset=utf-8', `devices-backup-${today}.json`);
+  const exportBackup = async () => {
+    setBackupBusy(true); setBackupMessage('');
+    try {
+      const res = await fetch('/api/backup');
+      const data = await res.json();
+      if (res.status === 403) throw new Error('النسخ الاحتياطي متاح للمدير فقط.');
+      if (!res.ok) throw new Error(data.error || 'تعذر إنشاء النسخة الاحتياطية.');
+      downloadFile(JSON.stringify(data, null, 2), 'application/json;charset=utf-8', `medical-devices-backup-${today}.json`);
+      setBackupMessage(`تم إنشاء نسخة كاملة تشمل ${data.devices.length} جهازًا وصورها.`);
+    } catch (error) {
+      setBackupMessage(error instanceof Error ? error.message : 'تعذر إنشاء النسخة الاحتياطية.');
+    } finally { setBackupBusy(false); }
+  };
+
+  const restoreBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!window.confirm('سيتم استبدال جميع الأجهزة وبلاغات الصيانة الحالية بمحتويات النسخة. هل تريد المتابعة؟')) return;
+    setBackupBusy(true); setBackupMessage('');
+    try {
+      const backup = JSON.parse(await file.text());
+      const res = await fetch('/api/backup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(backup) });
+      const data = await res.json();
+      if (res.status === 403) throw new Error('استعادة النسخة متاحة للمدير فقط.');
+      if (!res.ok) throw new Error(data.error || 'تعذرت استعادة النسخة.');
+      setBackupMessage(`تمت الاستعادة بنجاح: ${data.devices} جهازًا مع الصور و${data.maintenance_reports} بلاغ صيانة.`);
+      const devicesRes = await fetch('/api/devices');
+      if (devicesRes.ok) setDevices(await devicesRes.json());
+    } catch (error) {
+      setBackupMessage(error instanceof SyntaxError ? 'الملف المختار ليس ملف JSON صالحًا.' : error instanceof Error ? error.message : 'تعذرت استعادة النسخة.');
+    } finally { setBackupBusy(false); }
   };
 
   const clearFilters = () => { setSearch(''); setFromDate(''); setToDate(''); setStatus(''); };
@@ -100,10 +131,13 @@ export default function Report() {
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
             <button onClick={exportCsv} disabled={!filtered.length} className="rounded-lg bg-green-600 px-4 py-2.5 font-bold text-white hover:bg-green-700 disabled:opacity-50">تصدير Excel / CSV</button>
-            <button onClick={exportBackup} disabled={!devices.length} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-bold text-white hover:bg-indigo-700 disabled:opacity-50">تنزيل نسخة احتياطية JSON</button>
+            <button onClick={exportBackup} disabled={backupBusy} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-bold text-white hover:bg-indigo-700 disabled:opacity-50">{backupBusy ? 'جاري التنفيذ...' : 'نسخة احتياطية شاملة بالصور'}</button>
+            <label className={`cursor-pointer rounded-lg bg-amber-500 px-4 py-2.5 font-bold text-white hover:bg-amber-600 ${backupBusy ? 'pointer-events-none opacity-50' : ''}`}>استعادة نسخة احتياطية<input type="file" accept=".json,application/json" onChange={restoreBackup} className="hidden" /></label>
             <button onClick={() => window.print()} disabled={!filtered.length} className="rounded-lg bg-slate-800 px-4 py-2.5 font-bold text-white hover:bg-slate-900 disabled:opacity-50">طباعة / حفظ PDF</button>
             <button onClick={clearFilters} className="rounded-lg bg-slate-100 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-200">مسح الفلاتر</button>
           </div>
+          {backupMessage && <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 font-bold text-blue-800">{backupMessage}</div>}
+          <p className="mt-3 text-xs leading-6 text-slate-500">النسخة الشاملة تتضمن بيانات الأجهزة، صورها، وبلاغات الصيانة. هذه الخاصية متاحة للمدير فقط ولا تشمل حسابات المستخدمين.</p>
         </section>
 
         <section className="overflow-hidden rounded-xl bg-white shadow-sm print:shadow-none">
